@@ -1,5 +1,17 @@
+# Env
 .env*
+.env.*
+*.env
+
+# Database
 .db
 .sqlite
+.database
+store/*
 
-store/*.db
+# Code Editor / IDE
+.vscode
+.zed
+.idea
+
+build

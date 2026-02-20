@@ -44,14 +44,14 @@ func run(logger *slog.Logger) error {
 		return err
 	}
 
-	defer db.Close()
-
 	app := &application{
 		config: cfg,
 		db:     db,
 		logger: logger,
 		router: gin.Default(),
 	}
+
+	app.routes()
 
 	return app.serve()
 }

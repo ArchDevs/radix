@@ -56,6 +56,23 @@ func (app *application) serve() error {
 
 	app.logger.Info("stopped server", slog.Group("server", "addr", srv.Addr))
 
+	app.logger.Info("closing database connection")
+	dbCtx, dbCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer dbCancel()
+
+	done := make(chan struct{})
+	go func() {
+		app.db.Close()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		app.logger.Info("database connection closed")
+	case <-dbCtx.Done():
+		app.logger.Warn("database connection close timeout")
+	}
+
 	app.wg.Wait()
 	return nil
 }
