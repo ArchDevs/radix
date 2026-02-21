@@ -56,11 +56,19 @@ test-coverage:
 # Database migrations
 migrate: build-migrate
 	@echo "Running migrations up..."
-	@$(BUILD_DIR)/migrate up
+	@if [ -n "$(STEPS)" ]; then \
+		$(BUILD_DIR)/migrate up $(STEPS); \
+	else \
+		$(BUILD_DIR)/migrate up; \
+	fi
 
 migrate-down: build-migrate
 	@echo "Running migrations down..."
-	@$(BUILD_DIR)/migrate down
+	@if [ -n "$(STEPS)" ]; then \
+		$(BUILD_DIR)/migrate down $(STEPS); \
+	else \
+		$(BUILD_DIR)/migrate down; \
+	fi
 
 migrate-version: build-migrate
 	@echo "Checking migration version..."
@@ -143,8 +151,8 @@ help:
 	@echo "  make dev           - Run with hot reload (requires air)"
 	@echo "  make test          - Run tests"
 	@echo "  make test-coverage - Run tests with coverage report"
-	@echo "  make migrate       - Run database migrations up"
-	@echo "  make migrate-down  - Run database migrations down"
+	@echo "  make migrate       - Run database migrations up (STEPS=1 for single migration)"
+	@echo "  make migrate-down  - Run database migrations down (STEPS=1 for single migration)"
 	@echo "  make migrate-new   - Create new migration files (NAME=your_migration_name)"
 	@echo "  make clean         - Clean build artifacts"
 	@echo "  make install       - Install dependencies"

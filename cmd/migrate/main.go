@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/ArchDevs/radix/internal/config"
 	"github.com/golang-migrate/migrate/v4"
@@ -25,27 +26,55 @@ func init() {
 	rootCmd.AddCommand(versionCmd)
 }
 
+var steps int
+
 var upCmd = &cobra.Command{
-	Use:   "up",
-	Short: "Apply all up migrations",
+	Use:   "up [steps]",
+	Short: "Apply up migrations (all or specified steps)",
+	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		m := createMigrate()
-		if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-			log.Fatalf("Failed to run up migrations: %v", err)
+
+		if len(args) > 0 {
+			n, err := strconv.Atoi(args[0])
+			if err != nil {
+				log.Fatalf("Invalid step count: %v", err)
+			}
+			if err := m.Steps(n); err != nil && err != migrate.ErrNoChange {
+				log.Fatalf("Failed to run up migrations: %v", err)
+			}
+			fmt.Printf("✓ Applied %d migration(s) successfully\n", n)
+		} else {
+			if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+				log.Fatalf("Failed to run up migrations: %v", err)
+			}
+			fmt.Println("✓ All migrations applied successfully")
 		}
-		fmt.Println("✓ Migrations applied successfully")
 	},
 }
 
 var downCmd = &cobra.Command{
-	Use:   "down",
-	Short: "Rollback all migrations",
+	Use:   "down [steps]",
+	Short: "Rollback migrations (all or specified steps)",
+	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		m := createMigrate()
-		if err := m.Down(); err != nil && err != migrate.ErrNoChange {
-			log.Fatalf("Failed to run down migrations: %v", err)
+
+		if len(args) > 0 {
+			n, err := strconv.Atoi(args[0])
+			if err != nil {
+				log.Fatalf("Invalid step count: %v", err)
+			}
+			if err := m.Steps(-n); err != nil && err != migrate.ErrNoChange {
+				log.Fatalf("Failed to run down migrations: %v", err)
+			}
+			fmt.Printf("✓ Rolled back %d migration(s) successfully\n", n)
+		} else {
+			if err := m.Down(); err != nil && err != migrate.ErrNoChange {
+				log.Fatalf("Failed to run down migrations: %v", err)
+			}
+			fmt.Println("✓ All migrations rolled back successfully")
 		}
-		fmt.Println("✓ Migrations rolled back successfully")
 	},
 }
 
