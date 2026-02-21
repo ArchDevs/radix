@@ -5,6 +5,7 @@ import (
 	"github.com/ArchDevs/radix/internal/middleware"
 	"github.com/ArchDevs/radix/internal/repository"
 	"github.com/ArchDevs/radix/internal/service"
+	"github.com/ArchDevs/radix/internal/wsocket"
 	"golang.org/x/time/rate"
 )
 
@@ -13,7 +14,7 @@ func (app *application) routes() {
 	if rateLimit <= 0 {
 		rateLimit = rate.Limit(5)
 	}
-	
+
 	burst := app.config.Server.RateBurst
 	if burst <= 0 {
 		burst = 2
@@ -24,6 +25,9 @@ func (app *application) routes() {
 	v1 := app.router.Group("/v1")
 
 	v1.Use(globalLimiter.Middleware())
+
+	// Websocket
+	hub := wsocket.NewHub()
 
 	// Repositories
 	userRepo := repository.NewUserRepository(app.db)
@@ -38,9 +42,11 @@ func (app *application) routes() {
 	// Handlers
 	authHandler := handler.NewAuthHandler(authSvc)
 	challengeHandler := handler.NewChallengeHandler(challengeSvc, jwtSvc)
+	wsHandler := handler.NewWsHandler(hub, jwtSvc)
 
 	// Routes
 	v1.POST("/auth/register", authHandler.Register)
 	v1.GET("/challenge", challengeHandler.CreateChallenge)
 	v1.POST("/challenge/verify", challengeHandler.Verify)
+	v1.GET("/ws", wsHandler.Handle)
 }
