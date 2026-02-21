@@ -49,3 +49,11 @@ func (s *UserService) DeleteUser(ctx context.Context, address string) error {
 	}
 	return nil
 }
+
+func (s *UserService) Search(ctx context.Context, query string, limit int) ([]*User, error) {
+	users, err := s.userRepo.Search(ctx, query, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to search: %w", err)
+	}
+	return users, nil
+}

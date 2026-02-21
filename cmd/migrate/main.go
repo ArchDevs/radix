@@ -24,6 +24,7 @@ func init() {
 	rootCmd.AddCommand(upCmd)
 	rootCmd.AddCommand(downCmd)
 	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(forceCmd)
 }
 
 var steps int
@@ -88,6 +89,23 @@ var versionCmd = &cobra.Command{
 			log.Fatalf("Failed to get version: %v", err)
 		}
 		fmt.Printf("Version: %d, Dirty: %v\n", version, dirty)
+	},
+}
+
+var forceCmd = &cobra.Command{
+	Use:   "force [version]",
+	Short: "Force set migration version (for dirty state recovery)",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		m := createMigrate()
+		version, err := strconv.Atoi(args[0])
+		if err != nil {
+			log.Fatalf("Invalid version: %v", err)
+		}
+		if err := m.Force(version); err != nil {
+			log.Fatalf("Failed to force version: %v", err)
+		}
+		fmt.Printf("✓ Forced migration version to: %d\n", version)
 	},
 }
 

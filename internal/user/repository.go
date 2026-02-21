@@ -11,6 +11,8 @@ type UserRepository interface {
 	GetByAddress(ctx context.Context, address string) (*User, error)
 	UpdatePublicKey(ctx context.Context, address string, publicKey []byte) error
 	Delete(ctx context.Context, address string) error
+	Exists(ctx context.Context, address string) (bool, error)
+	Search(ctx context.Context, query string, limit int) ([]*User, error)
 }
 
 type UserStore struct {
@@ -47,4 +49,49 @@ func (r *UserStore) Delete(ctx context.Context, address string) error {
 	query := `DELETE FROM users WHERE address = ?`
 	_, err := r.db.ExecContext(ctx, query, address)
 	return err
+}
+
+func (r *UserStore) Exists(ctx context.Context, address string) (bool, error) {
+	var exists bool
+
+	err := r.db.QueryRowContext(ctx, `
+		SELECT EXISTS(
+			SELECT 1 FROM users WHERE address = ?
+		)
+	`, address).Scan(&exists)
+
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
+}
+
+func (r *UserStore) Search(ctx context.Context, query string, limit int) ([]*User, error) {
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT address, username, display_name, created_at
+		FROM users
+		WHERE allow_search = 1
+		AND (
+			username LIKE ? COLLATE NOCASE
+			OR address LIKE ?
+		)
+		LIMIT ?
+	`, query+"%", query+"%", limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []*User
+
+	for rows.Next() {
+		var u User
+		if err := rows.Scan(&u.Address, &u.Username, &u.DisplayName, &u.CreatedAt); err != nil {
+			return nil, err
+		}
+		users = append(users, &u)
+	}
+
+	return users, rows.Err()
 }

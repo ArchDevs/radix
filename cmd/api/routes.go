@@ -33,6 +33,7 @@ func (app *application) routes() {
 	// User
 	userRepo := user.NewUserRepository(app.db)
 	userSvc := user.NewUserService(userRepo)
+	userHandler := user.NewUserHandler(userSvc)
 
 	// Auth
 	authSvc := auth.NewAuthService(userSvc)
@@ -52,4 +53,5 @@ func (app *application) routes() {
 	v1.GET("/challenge", challengeHandler.CreateChallenge)
 	v1.POST("/challenge/verify", challengeHandler.Verify)
 	v1.GET("/ws", wsHandler.Handle)
+	v1.GET("/search", userHandler.Search)
 }

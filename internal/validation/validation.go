@@ -73,5 +73,5 @@ func IsValidHex(s string) bool {
 	return err == nil
 }
 
-var AddressRegex = regexp.MustCompile(`^(0x)?[a-fA-F0-9]{40,64}$`)
-var UsernameRegex = regexp.MustCompile(`^[a-fA-F0-9_]{3,16}$`)
+var AddressRegex = regexp.MustCompile(`^rad:[1-9A-HJ-NP-Za-km-z]{16}$`)
+var UsernameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]{3,32}$`)
