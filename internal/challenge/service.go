@@ -1,4 +1,4 @@
-package service
+package challenge
 
 import (
 	"context"
@@ -8,17 +8,16 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ArchDevs/radix/internal/model"
-	"github.com/ArchDevs/radix/internal/repository"
+	"github.com/ArchDevs/radix/internal/user"
 )
 
 type ChallengeService struct {
-	challengeRepo repository.ChallengeRepository
+	challengeRepo ChallengeRepository
 
-	userSvc UserService
+	userSvc user.UserService
 }
 
-func NewChallengeService(challengeRepo repository.ChallengeRepository, userSvc UserService) *ChallengeService {
+func NewChallengeService(challengeRepo ChallengeRepository, userSvc user.UserService) *ChallengeService {
 	return &ChallengeService{
 		challengeRepo: challengeRepo,
 		userSvc:       userSvc,
@@ -33,7 +32,7 @@ func (s *ChallengeService) CreateChallenge(ctx context.Context, address string) 
 	nonceStr := base64.StdEncoding.EncodeToString(nonce)
 	createdAt := time.Now()
 
-	challenge := &model.Challenge{
+	challenge := &Challenge{
 		Address:   address,
 		Nonce:     nonceStr,
 		CreatedAt: createdAt,
@@ -46,7 +45,7 @@ func (s *ChallengeService) CreateChallenge(ctx context.Context, address string) 
 	return nonceStr, createdAt.Unix(), nil
 }
 
-func (s *ChallengeService) GetChallenge(ctx context.Context, address string) (*model.Challenge, error) {
+func (s *ChallengeService) GetChallenge(ctx context.Context, address string) (*Challenge, error) {
 	challenge, err := s.challengeRepo.GetByAddress(ctx, address)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get challenge: %w", err)

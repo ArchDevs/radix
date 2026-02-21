@@ -1,18 +1,17 @@
-package handler
+package auth
 
 import (
 	"net/http"
 
-	"github.com/ArchDevs/radix/internal/service"
 	"github.com/ArchDevs/radix/internal/validation"
 	"github.com/gin-gonic/gin"
 )
 
 type AuthHandler struct {
-	authSvc *service.AuthService
+	authSvc *AuthService
 }
 
-func NewAuthHandler(authSvc *service.AuthService) *AuthHandler {
+func NewAuthHandler(authSvc *AuthService) *AuthHandler {
 	return &AuthHandler{
 		authSvc: authSvc,
 	}

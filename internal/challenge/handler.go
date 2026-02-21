@@ -1,4 +1,4 @@
-package handler
+package challenge
 
 import (
 	"net/http"
@@ -9,11 +9,11 @@ import (
 )
 
 type ChallengeHandler struct {
-	challengeSvc *service.ChallengeService
+	challengeSvc *ChallengeService
 	jwtSvc       *service.JWTService
 }
 
-func NewChallengeHandler(challengeSvc *service.ChallengeService, jwtSvc *service.JWTService) *ChallengeHandler {
+func NewChallengeHandler(challengeSvc *ChallengeService, jwtSvc *service.JWTService) *ChallengeHandler {
 	return &ChallengeHandler{
 		challengeSvc: challengeSvc,
 		jwtSvc:       jwtSvc,

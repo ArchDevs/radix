@@ -1,10 +1,9 @@
-package handler
+package wsocket
 
 import (
 	"net/http"
 
 	"github.com/ArchDevs/radix/internal/service"
-	"github.com/ArchDevs/radix/internal/wsocket"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
@@ -18,11 +17,11 @@ var upgrader = websocket.Upgrader{
 }
 
 type WebSocketHandler struct {
-	Hub        *wsocket.Hub
+	Hub        *Hub
 	JWTService *service.JWTService
 }
 
-func NewWsHandler(hub *wsocket.Hub, jwt *service.JWTService) *WebSocketHandler {
+func NewWsHandler(hub *Hub, jwt *service.JWTService) *WebSocketHandler {
 	return &WebSocketHandler{
 		Hub:        hub,
 		JWTService: jwt,
@@ -47,7 +46,7 @@ func (h *WebSocketHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	client := &wsocket.Client{
+	client := &Client{
 		Hub:     h.Hub,
 		Conn:    conn,
 		Address: address,

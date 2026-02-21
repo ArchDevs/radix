@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/ArchDevs/radix/internal/handler"
+	"github.com/ArchDevs/radix/internal/auth"
+	"github.com/ArchDevs/radix/internal/challenge"
 	"github.com/ArchDevs/radix/internal/middleware"
-	"github.com/ArchDevs/radix/internal/repository"
 	"github.com/ArchDevs/radix/internal/service"
+	"github.com/ArchDevs/radix/internal/user"
 	"github.com/ArchDevs/radix/internal/wsocket"
 	"golang.org/x/time/rate"
 )
@@ -26,23 +27,25 @@ func (app *application) routes() {
 
 	v1.Use(globalLimiter.Middleware())
 
-	// Websocket
-	hub := wsocket.NewHub()
-
-	// Repositories
-	userRepo := repository.NewUserRepository(app.db)
-	challengeRepo := repository.NewChallengeRepository(app.db)
-
-	// Services
-	userSvc := service.NewUserService(userRepo)
-	authSvc := service.NewAuthService(userSvc)
-	challengeSvc := service.NewChallengeService(challengeRepo, userSvc)
+	// Service
 	jwtSvc := service.NewJWTService(app.config.Security.JwtSecret, app.config.Security.JwtTTL)
 
-	// Handlers
-	authHandler := handler.NewAuthHandler(authSvc)
-	challengeHandler := handler.NewChallengeHandler(challengeSvc, jwtSvc)
-	wsHandler := handler.NewWsHandler(hub, jwtSvc)
+	// User
+	userRepo := user.NewUserRepository(app.db)
+	userSvc := user.NewUserService(userRepo)
+
+	// Auth
+	authSvc := auth.NewAuthService(userSvc)
+	authHandler := auth.NewAuthHandler(authSvc)
+
+	// Challenge
+	challengeRepo := challenge.NewChallengeRepository(app.db)
+	challengeSvc := challenge.NewChallengeService(challengeRepo, userSvc)
+	challengeHandler := challenge.NewChallengeHandler(challengeSvc, jwtSvc)
+
+	// Websocket
+	hub := wsocket.NewHub()
+	wsHandler := wsocket.NewWsHandler(hub, jwtSvc)
 
 	// Routes
 	v1.POST("/auth/register", authHandler.Register)
