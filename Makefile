@@ -66,16 +66,18 @@ migrate-version: build-migrate
 	@echo "Checking migration version..."
 	@$(BUILD_DIR)/migrate version
 
-# Create new migration file
+# Create new migration file using golang-migrate
 migrate-new:
 	@if [ -z "$(NAME)" ]; then \
 		echo "Usage: make migrate-new NAME=create_users_table"; \
 		exit 1; \
 	fi
-	@TIMESTAMP=$$(date +%Y%m%d%H%M%S); \
-	FILE="migrations/$${TIMESTAMP}_$(NAME)"; \
-	touch "$${FILE}.up.sql" "$${FILE}.down.sql"; \
-	echo "✓ Created migration files: $${FILE}.up.sql and $${FILE}.down.sql"
+	@if ! command -v migrate >/dev/null 2>&1; then \
+		echo "Installing golang-migrate..."; \
+		go install -tags 'sqlite3' github.com/golang-migrate/migrate/v4/cmd/migrate@latest; \
+	fi
+	@migrate create -ext sql -dir migrations -seq $(NAME)
+	@echo "✓ Created migration files for: $(NAME)"
 
 # Clean build artifacts
 clean:
