@@ -1,8 +1,12 @@
 package wsocket
 
 import (
+	"context"
+	"encoding/json"
 	"net/http"
+	"time"
 
+	"github.com/ArchDevs/radix/internal/message"
 	"github.com/ArchDevs/radix/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -17,14 +21,16 @@ var upgrader = websocket.Upgrader{
 }
 
 type WebSocketHandler struct {
-	Hub        *Hub
-	JWTService *service.JWTService
+	Hub            *Hub
+	JWTService     *service.JWTService
+	MessageService *message.MessageService
 }
 
-func NewWsHandler(hub *Hub, jwt *service.JWTService) *WebSocketHandler {
+func NewWsHandler(hub *Hub, jwt *service.JWTService, msgSvc *message.MessageService) *WebSocketHandler {
 	return &WebSocketHandler{
-		Hub:        hub,
-		JWTService: jwt,
+		Hub:            hub,
+		JWTService:     jwt,
+		MessageService: msgSvc,
 	}
 }
 
@@ -55,6 +61,29 @@ func (h *WebSocketHandler) Handle(c *gin.Context) {
 
 	h.Hub.Register(client)
 
+	// Send undelivered messages
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
+		msgs, err := h.MessageService.GetUndeliveredMessages(ctx, address)
+		if err != nil {
+			return
+		}
+
+		for _, m := range msgs {
+			out := OutgoingMessage{
+				ID:        m.ID,
+				From:      m.Sender,
+				Content:   m.Content,
+				Timestamp: m.CreatedAt.Unix(),
+			}
+			payload, _ := json.Marshal(out)
+			client.Send <- payload
+			h.MessageService.MarkAsDelivered(ctx, m.ID)
+		}
+	}()
+
 	go client.WritePump()
-	go client.ReadPump()
+	go client.ReadPump(h.MessageService)
 }

@@ -10,6 +10,7 @@ type UserRepository interface {
 	Create(ctx context.Context, user *User) error
 	GetByAddress(ctx context.Context, address string) (*User, error)
 	UpdatePublicKey(ctx context.Context, address string, publicKey []byte) error
+	UpdateUsername(ctx context.Context, address string, username string) error
 	Delete(ctx context.Context, address string) error
 	Exists(ctx context.Context, address string) (bool, error)
 	Search(ctx context.Context, query string, limit int) ([]*User, error)
@@ -42,6 +43,12 @@ func (r *UserStore) GetByAddress(ctx context.Context, address string) (*User, er
 func (r *UserStore) UpdatePublicKey(ctx context.Context, address string, publicKey []byte) error {
 	query := `UPDATE users SET public_key = ? WHERE address = ?`
 	_, err := r.db.ExecContext(ctx, query, publicKey, address)
+	return err
+}
+
+func (r *UserStore) UpdateUsername(ctx context.Context, address string, username string) error {
+	query := `UPDATE users SET username = ? WHERE address = ?`
+	_, err := r.db.ExecContext(ctx, query, username, address)
 	return err
 }
 

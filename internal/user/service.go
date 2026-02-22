@@ -43,6 +43,13 @@ func (s *UserService) UpdatePublicKey(ctx context.Context, address string, publi
 	return nil
 }
 
+func (s *UserService) UpdateUsername(ctx context.Context, address string, username string) error {
+	if err := s.userRepo.UpdateUsername(ctx, address, username); err != nil {
+		return fmt.Errorf("failed to update username: %w", err)
+	}
+	return nil
+}
+
 func (s *UserService) DeleteUser(ctx context.Context, address string) error {
 	if err := s.userRepo.Delete(ctx, address); err != nil {
 		return fmt.Errorf("failed to delete user: %w", err)

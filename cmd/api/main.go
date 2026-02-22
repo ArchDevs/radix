@@ -8,6 +8,7 @@ import (
 
 	"github.com/ArchDevs/radix/internal/config"
 	"github.com/ArchDevs/radix/internal/database"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/lmittmann/tint"
@@ -50,6 +51,15 @@ func run(logger *slog.Logger) error {
 		logger: logger,
 		router: gin.Default(),
 	}
+
+	// Configure CORS to allow all origins (adjust for production)
+	app.router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
 
 	app.routes()
 

@@ -53,3 +53,42 @@ func (h *UserHandler) Search(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response)
 }
+
+func (h *UserHandler) Me(c *gin.Context) {
+	address := c.GetString("address")
+
+	user, err := h.userSvc.GetUser(c.Request.Context(), address)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get user"})
+		return
+	}
+
+	response := UserResponse{
+		Address:     user.Address,
+		Username:    user.Username.String,
+		DisplayName: user.DisplayName.String,
+		CreatedAt:   user.CreatedAt,
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+func (h *UserHandler) SetUsername(c *gin.Context) {
+	address := c.GetString("address")
+
+	var req struct {
+		Username string `json:"username" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		return
+	}
+
+	if err := h.userSvc.UpdateUsername(c.Request.Context(), address, req.Username); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update username"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "username updated", "username": req.Username})
+}

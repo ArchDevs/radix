@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/ArchDevs/radix/internal/auth"
 	"github.com/ArchDevs/radix/internal/challenge"
+	"github.com/ArchDevs/radix/internal/message"
 	"github.com/ArchDevs/radix/internal/middleware"
 	"github.com/ArchDevs/radix/internal/service"
 	"github.com/ArchDevs/radix/internal/user"
@@ -44,14 +45,32 @@ func (app *application) routes() {
 	challengeSvc := challenge.NewChallengeService(challengeRepo, userSvc)
 	challengeHandler := challenge.NewChallengeHandler(challengeSvc, jwtSvc)
 
+	// Message
+	msgRepo := message.NewMessageRepository(app.db)
+	msgSvc := message.NewMessageService(msgRepo)
+	msgHandler := message.NewHandler(msgSvc)
+
 	// Websocket
 	hub := wsocket.NewHub()
-	wsHandler := wsocket.NewWsHandler(hub, jwtSvc)
+	wsHandler := wsocket.NewWsHandler(hub, jwtSvc, msgSvc)
 
-	// Routes
+	// Public routes
 	v1.POST("/auth/register", authHandler.Register)
 	v1.GET("/challenge", challengeHandler.CreateChallenge)
 	v1.POST("/challenge/verify", challengeHandler.Verify)
 	v1.GET("/ws", wsHandler.Handle)
-	v1.GET("/search", userHandler.Search)
+
+	// Protected routes
+	protected := v1.Group("/")
+	protected.Use(auth.Auth(jwtSvc))
+	{
+		// User
+		protected.GET("/me", userHandler.Me)
+		protected.POST("/me/username", userHandler.SetUsername)
+		protected.GET("/search", userHandler.Search)
+
+		// Messages
+		protected.GET("/messages", msgHandler.GetHistory) // ?with=rad:xxx
+		protected.GET("/messages/undelivered", msgHandler.GetUndelivered)
+	}
 }
