@@ -31,7 +31,7 @@ func (r *UserStore) Create(ctx context.Context, user *User) error {
 }
 
 func (r *UserStore) GetByAddress(ctx context.Context, address string) (*User, error) {
-	query := `SELECT address, public_key, created_at FROM users WHERE address = ?`
+	query := `SELECT address, username, display_name, public_key, created_at FROM users WHERE address = ?`
 	var user User
 	err := r.db.GetContext(ctx, &user, query, address)
 	if err != nil {
